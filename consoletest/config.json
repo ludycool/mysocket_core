@@ -1,0 +1,21 @@
+﻿{
+  "supersocket": {
+    "servers": [
+      {
+        "name": "mainserver",
+        "port": "1678",
+        "mode": "udp",
+        "maxConnectionNumber": "50000",
+        "clearIdleSession": "true",
+        "IdleSessionTimeOut": "120",
+        "maxRequestLength": "3072",
+        "logBasicSessionActivity": "true",
+        "logAllSocketException": "true"
+      }
+    ],
+    "serverIp": "127.0.0.1",
+    "queue_project": "gps_oldman_",
+    "queueteam1": "gps_oldman_",
+    "queue_senddata": "gps_oldman_S_"
+  }
+}
