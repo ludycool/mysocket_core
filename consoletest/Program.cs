@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using SuperSocket.SocketBase;
 using SuperSocket.SocketBase.Config;
+using SuperSocket.SocketEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace consoletest
         {
             Console.WriteLine("Hello World!");
             #region 硬编码 启动
-
+            
             var appServer = new MyServer();
             IServerConfig m_Config;
 
@@ -48,10 +49,34 @@ namespace consoletest
                 Console.ReadKey();
                 return;
             }
-
+           
             #endregion
 
+            #region  bootstrap 启动
 
+            /*
+            var bootstrap = BootstrapFactory.CreateBootstrap();
+
+            if (!bootstrap.Initialize())
+            {
+                Console.WriteLine("Failed to initialize!");
+                Console.ReadKey();
+                return;
+            }
+
+            var result = bootstrap.Start();
+
+            Console.WriteLine("Start result: {0}!", result);
+
+            if (result == StartResult.Failed)
+            {
+                Console.WriteLine("Failed to start!");
+                Console.ReadKey();
+                return;
+            }
+            */
+
+            #endregion
 
             #region websocket
 
@@ -88,7 +113,7 @@ namespace consoletest
                 var str = Console.ReadLine();
                 if (str.ToLower().Equals("exit"))
                 {
-                    appServer.Stop();
+                   // appServer.Stop();
 
                     break;
                 }

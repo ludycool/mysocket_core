@@ -6,14 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using SuperSocket.Common;
 using SuperSocket.SocketBase;
 using SuperSocket.SocketBase.Command;
 using SuperSocket.SocketBase.Config;
 using SuperWebSocket.Command;
+using SuperWebSocket.Config;
 using SuperWebSocket.Protocol;
 using SuperWebSocket.SubProtocol;
-using SuperSocket.Common;
-using Newtonsoft.Json;
 
 namespace SuperWebSocket
 {
@@ -203,7 +203,106 @@ namespace SuperWebSocket
             return true;
         }
 
-      
+        private bool SetupSubProtocols(IServerConfig config)
+        {
+            //Preparing sub protocols' configuration
+            var subProtocolConfigSection = config.GetChildConfig<SubProtocolConfigCollection>("subProtocols");
+
+            var subProtocolConfigDict = new Dictionary<string, SubProtocolConfig>(subProtocolConfigSection == null ? 0 : subProtocolConfigSection.Count, StringComparer.OrdinalIgnoreCase);
+
+            if (subProtocolConfigSection != null)
+            {
+                foreach (var protocolConfig in subProtocolConfigSection)
+                {
+                    string originalProtocolName = protocolConfig.Name;
+                    string protocolName;
+                    
+                    ISubProtocol<TWebSocketSession> subProtocolInstance;
+
+                    if (!string.IsNullOrEmpty(originalProtocolName))
+                    {
+                        protocolName = originalProtocolName;
+
+                        if (!string.IsNullOrEmpty(protocolConfig.Type))
+                        {
+                            try
+                            {
+                                subProtocolInstance = AssemblyUtil.CreateInstance<ISubProtocol<TWebSocketSession>>(protocolConfig.Type, new object[] { originalProtocolName });
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Error(e);
+                                return false;
+                            }
+
+                            if (!RegisterSubProtocol(subProtocolInstance))
+                                return false;
+                        }
+                        else
+                        {
+                            if (!m_SubProtocols.ContainsKey(protocolName))
+                            {
+                                subProtocolInstance = new BasicSubProtocol<TWebSocketSession>(protocolName);
+
+                                if (!RegisterSubProtocol(subProtocolInstance))
+                                    return false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        protocolName = BasicSubProtocol<TWebSocketSession>.DefaultName;
+
+                        if (!string.IsNullOrEmpty(protocolConfig.Type))
+                        {
+                            if(Logger.IsErrorEnabled)
+                                Logger.Error("You needn't set Type attribute for SubProtocol, if you don't set Name attribute!");
+                            return false;
+                        }
+                    }
+
+                    subProtocolConfigDict[protocolName] = protocolConfig;
+                }
+
+                if(subProtocolConfigDict.Values.Any())
+                    m_SubProtocolConfigured = true;
+            }
+
+            if (m_SubProtocols.Count <= 0 || (subProtocolConfigDict.ContainsKey(BasicSubProtocol<TWebSocketSession>.DefaultName) && !m_SubProtocols.ContainsKey(BasicSubProtocol<TWebSocketSession>.DefaultName)))
+            {
+                if (!RegisterSubProtocol(BasicSubProtocol<TWebSocketSession>.CreateDefaultSubProtocol()))
+                    return false;
+            }
+
+            //Initialize sub protocols
+            foreach (var subProtocol in m_SubProtocols.Values)
+            {
+                SubProtocolConfig protocolConfig = null;
+
+                subProtocolConfigDict.TryGetValue(subProtocol.Name, out protocolConfig);
+
+                bool initialized = false;
+
+                try
+                {
+                    initialized = subProtocol.Initialize(this, protocolConfig, Logger);
+                }
+                catch (Exception e)
+                {
+                    initialized = false;
+                    Logger.Error(e);
+                }
+
+                if (!initialized)
+                {
+                    if (Logger.IsErrorEnabled)
+                        Logger.ErrorFormat("Failed to initialize the sub protocol '{0}'!", subProtocol.Name);
+                    return false;
+                }
+            }
+            
+            return true;
+        }
 
         /// <summary>
         /// Setups with the specified root config.
@@ -231,14 +330,14 @@ namespace SuperWebSocket
 
             SetupMultipleProtocolSwitch(m_WebSocketProtocolProcessor);
 
-          //  if (!int.TryParse(config.Options.GetValue("handshakePendingQueueCheckingInterval"), out m_HandshakePendingQueueCheckingInterval))
+            if (!int.TryParse(config.Options.GetValue("handshakePendingQueueCheckingInterval"), out m_HandshakePendingQueueCheckingInterval))
                 m_HandshakePendingQueueCheckingInterval = 60;// 1 minute default
 
 
-          //  if (!int.TryParse(config.Options.GetValue("openHandshakeTimeOut"), out m_OpenHandshakeTimeOut))
+            if (!int.TryParse(config.Options.GetValue("openHandshakeTimeOut"), out m_OpenHandshakeTimeOut))
                 m_OpenHandshakeTimeOut = 120;// 2 minute default
 
-           // if (!int.TryParse(config.Options.GetValue("closeHandshakeTimeOut"), out m_CloseHandshakeTimeOut))
+            if (!int.TryParse(config.Options.GetValue("closeHandshakeTimeOut"), out m_CloseHandshakeTimeOut))
                 m_CloseHandshakeTimeOut = 120;// 2 minute default
 
             if (m_BinaryDataConverter == null)
@@ -541,8 +640,8 @@ namespace SuperWebSocket
 
             commands.ForEach(c => discoveredCommands.Add(c.Name, c));
 
-            //if (!SetupSubProtocols(Config))
-            //    return false;
+            if (!SetupSubProtocols(Config))
+                return false;
 
             return true;
         }
@@ -592,10 +691,10 @@ namespace SuperWebSocket
         /// </summary>
         /// <param name="target">The target.</param>
         /// <returns></returns>
-        public virtual string JsonSerialize(object target)
-        {
-            return JsonConvert.SerializeObject(target);
-        }
+        //public virtual string JsonSerialize(object target)
+        //{
+        //    return JsonConvert.SerializeObject(target);
+        //}
 
         /// <summary>
         /// Deserialize the JSON string to target type object.
@@ -603,10 +702,10 @@ namespace SuperWebSocket
         /// <param name="json">The json.</param>
         /// <param name="type">The type.</param>
         /// <returns></returns>
-        public virtual object JsonDeserialize(string json, Type type)
-        {
-            return JsonConvert.DeserializeObject(json, type);
-        }
+        //public virtual object JsonDeserialize(string json, Type type)
+        //{
+        //    return JsonConvert.DeserializeObject(json, type);
+        //}
 
         #endregion
     }

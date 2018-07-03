@@ -1,4 +1,14 @@
-﻿using SuperSocket.SocketBase.Protocol;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using SuperSocket.SocketBase.Logging;
+using SuperSocket.SocketBase.Command;
+using SuperSocket.SocketBase.Config;
+using SuperSocket.SocketBase.Protocol;
+using SuperWebSocket.Config;
+using SuperSocket.SocketBase;
 
 namespace SuperWebSocket.SubProtocol
 {
@@ -16,7 +26,7 @@ namespace SuperWebSocket.SubProtocol
         /// <param name="protocolConfig">The protocol config.</param>
         /// <param name="logger">The logger.</param>
         /// <returns></returns>
-      //  bool Initialize(IAppServer appServer, SubProtocolConfig protocolConfig, ILog logger);
+        bool Initialize(IAppServer appServer, SubProtocolConfig protocolConfig, ILog logger);
 
         /// <summary>
         /// Gets the name.

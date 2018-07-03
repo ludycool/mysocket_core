@@ -50,9 +50,9 @@ namespace SuperWebSocket.SubProtocol
             if (!string.IsNullOrEmpty(requestInfo.Token))
                 session.CurrentToken = requestInfo.Token;
 
-            if (!m_IsSimpleType)
-                jsonCommandInfo = (TJsonCommandInfo)session.AppServer.JsonDeserialize(requestInfo.Body, m_CommandInfoType);
-            else
+            //if (!m_IsSimpleType)
+            //    jsonCommandInfo = (TJsonCommandInfo)session.AppServer.JsonDeserialize(requestInfo.Body, m_CommandInfoType);
+            //else
                 jsonCommandInfo = (TJsonCommandInfo)Convert.ChangeType(requestInfo.Body, m_CommandInfoType);
 
             ExecuteJsonCommand(session, jsonCommandInfo);
@@ -78,10 +78,10 @@ namespace SuperWebSocket.SubProtocol
             string strOutput;
 
             //Needn't serialize primitive type object
-            if (content.GetType().IsSimpleType())
+            //if (content.GetType().IsSimpleType())
                 strOutput = content.ToString();
-            else
-                strOutput = session.AppServer.JsonSerialize(content);
+            //else
+            //    strOutput = session.AppServer.JsonSerialize(content);
 
             if (string.IsNullOrEmpty(token))
                 return string.Format(m_QueryTemplateB, name, strOutput);
